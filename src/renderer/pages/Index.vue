@@ -6,9 +6,11 @@
         <li v-for="(record,hash) in records"
             :key="hash"
             :title="titleInfo(record)"
-            :style="{order:record.score}" @click="setClipboard(hash)" v-if="checkSearch(record.content)">
-          <small>{{ hash.slice(0, 6) }}</small>
-          {{ simpleContent(record.content) }}
+            :style="{order:record.score}" v-if="checkSearch(record.content)">
+          <small :title="hash">{{ hash.slice(0, 6) }}</small>
+          <template @click="setClipboard(hash)">
+            {{ simpleContent(record.content) }}
+          </template>
           <span class="time">{{ record.lastUsedTime }}</span>
         </li>
       </ul>
@@ -38,6 +40,7 @@
   line-height: 32px;
   cursor: pointer;
   padding: 0 10px;
+  font: 400 12px/24px '微软雅黑';
 }
 
 #records li:hover {
@@ -45,11 +48,14 @@
 }
 
 #records li small {
-  background: #333;
+  display: inline-block;
+  background: #222;
   border-radius: 3px;
   color: #fff;
-  padding: 4px;
+  width: 50px;
   font-size: 10px;
+  text-align: center;
+  margin-right: 10px;
 }
 
 #records li span.time {
@@ -95,7 +101,7 @@ export default {
       if (this.cpData[hash]) return;
 
       let data = {
-        // hash: hash,
+        hash: hash,
         content: content,
         createdTime: moment(new Date).format(this.$config.time_format),
         lastUsedTime: moment(new Date).format(this.$config.time_format)
@@ -121,7 +127,7 @@ export default {
       })
     },
     titleInfo(record) {
-      return '剪切板内容: ' + record.content + '\n\n创建时间: ' + record.createdTime + '\n\n最后使用时间: ' + record.lastUsedTime;
+      return '剪切板内容: ' + record.content + '\n\nHash:' + record.hash + '\n创建时间: ' + record.createdTime + '\n最后使用时间: ' + record.lastUsedTime;
     },
     simpleContent(content) {
       let tail = content.length > this.$config.simple_content_length ? '...' : '';

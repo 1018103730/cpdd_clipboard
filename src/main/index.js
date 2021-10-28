@@ -1,7 +1,7 @@
-import {app, BrowserWindow, ipcMain, Menu, Tray, Notification} from 'electron'
+import {app, BrowserWindow, ipcMain, Menu, MenuItem, Tray, Notification, globalShortcut} from 'electron'
 import path from 'path';
 import '../renderer/store'
-
+import config from '../config'
 
 /**
  * Set `__static` path to static files in production
@@ -12,9 +12,26 @@ if (process.env.NODE_ENV !== 'development') {
 }
 let tray = null;
 let mainWindow;
+let isMac = process.platform == 'darwin';
 const winURL = process.env.NODE_ENV === 'development'
     ? `http://localhost:9080`
     : `file://${__dirname}/index.html`
+
+const menu = new Menu()
+menu.append(new MenuItem({
+    label: 'Electron',
+    submenu: [{
+        role: 'help',
+        label: '退出程序',
+        accelerator: process.platform === 'darwin' ?
+            config.shortcut_key.mac.quit : config.shortcut_key.win.quit,
+        click: () => {
+            app.quit()
+        }
+    }]
+}))
+
+Menu.setApplicationMenu(menu)
 
 function createWindow() {
     /**
@@ -65,9 +82,19 @@ function openMessage(title, content, callback = null) {
 }
 
 app.on('ready', () => {
-    openMessage('cpdd', '程序已启动,并运行在后台,双击托盘图标显示界面!');
+    globalShortcut.register(isMac ? config.shortcut_key.mac.show : config.shortcut_key.win.show, () => {
+        if (mainWindow != null) {
+            mainWindow.show();
+        } else {
+            createWindow();
+        }
+    })
 
-    let iconPath = path.join(__static, 'clipboard.png');
+    let showKey = isMac ? config.shortcut_key.mac.show : config.shortcut_key.win.show;
+
+    openMessage('cpdd', '程序已启动,并运行在后台,双击托盘图标或' + showKey + '显示界面!');
+
+    let iconPath = path.join(__static, 'clipboard.ico');
     console.log(iconPath);
     tray = new Tray(iconPath);
     // const contextMenu = Menu.buildFromTemplate([
