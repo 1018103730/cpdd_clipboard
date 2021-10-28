@@ -1,4 +1,5 @@
-import {app, BrowserWindow, ipcMain} from 'electron'
+import {app, BrowserWindow, ipcMain, Menu, Tray, Notification} from 'electron'
+import path from 'path';
 import '../renderer/store'
 
 
@@ -9,8 +10,8 @@ import '../renderer/store'
 if (process.env.NODE_ENV !== 'development') {
     global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
-
-let mainWindow
+let tray = null;
+let mainWindow;
 const winURL = process.env.NODE_ENV === 'development'
     ? `http://localhost:9080`
     : `file://${__dirname}/index.html`
@@ -20,11 +21,10 @@ function createWindow() {
      * Initial window options
      */
     mainWindow = new BrowserWindow({
-        height: 563,
+        height: 700,
         useContentSize: true,
         width: 500,
         minWidth: 500,
-        resizable: false
     })
 
     mainWindow.loadURL(winURL)
@@ -34,7 +34,10 @@ function createWindow() {
     })
 
     if (process.env.NODE_ENV === 'development') {
-        BrowserWindow.addDevToolsExtension('C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Extensions\\nhdogjmejiglipccpnnnanhbledajbpd\\5.3.4_0')
+        // window系统加载vue开发工具
+        if (process.platform == 'win32') {
+            BrowserWindow.addDevToolsExtension('C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Extensions\\nhdogjmejiglipccpnnnanhbledajbpd\\5.3.4_0')
+        }
     }
 
     mainWindow.webContents.on('did-finish-load', () => {
@@ -49,17 +52,46 @@ function createWindow() {
             }
         })
     })
-
-    mainWindow.on('resize', function (event, args) {
-        console.log(mainWindow.getBounds());
-    });
 }
 
-app.on('ready', createWindow)
+function openMessage(title, content, callback = null) {
+    let msg = new Notification({title: title, body: content});
+
+    if (!callback) {
+        msg.onclick = callback;
+    }
+
+    msg.show();
+}
+
+app.on('ready', () => {
+    openMessage('cpdd', '程序已启动,并运行在后台,双击托盘图标显示界面!');
+
+    let iconPath = path.join(__static, 'clipboard.png');
+    console.log(iconPath);
+    tray = new Tray(iconPath);
+    // const contextMenu = Menu.buildFromTemplate([
+    //     {label: 'Item1', type: 'radio'},
+    //     {label: 'Item2', type: 'radio'},
+    //     {label: 'Item3', type: 'radio', checked: true},
+    //     {label: 'Item4', type: 'radio'}
+    // ])
+
+    tray.setToolTip('cpdd 剪贴板')
+    // tray.setContextMenu(contextMenu)
+
+    tray.on('double-click', function (event, bounds) {
+        if (mainWindow != null) {
+            mainWindow.show();
+        } else {
+            createWindow();
+        }
+    });
+})
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-        app.quit()
+        // app.quit()
     }
 })
 

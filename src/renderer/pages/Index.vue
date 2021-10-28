@@ -9,7 +9,6 @@
             :style="{order:record.score}" @click="setClipboard(hash)" v-if="checkSearch(record.content)">
           <small>{{ hash.slice(0, 6) }}</small>
           {{ simpleContent(record.content) }}
-
           <span class="time">{{ record.lastUsedTime }}</span>
         </li>
       </ul>
@@ -24,7 +23,7 @@
 }
 
 #app {
-  margin: 10px;
+  margin: 3px;
 }
 
 #records {
@@ -38,7 +37,7 @@
   border-bottom: 1px solid #efefef;
   line-height: 32px;
   cursor: pointer;
-  text-indent: 10px;
+  padding: 0 10px;
 }
 
 #records li:hover {
@@ -137,7 +136,7 @@ export default {
 
       this.refreshData();
       this.syncData();
-      this.$message('内容已添加到系统剪切板!');
+      this.$notify.success({message: '内容已添加到系统剪切板!', title: '操作成功', showClose: true});
     }
   }
 }
